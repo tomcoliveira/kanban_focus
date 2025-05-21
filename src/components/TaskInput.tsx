@@ -1,32 +1,38 @@
 import React, { useState, KeyboardEvent } from 'react';
-import { Plus, Calendar, Flag } from 'lucide-react';
+import { Plus, Calendar, Flag, Clock } from 'lucide-react';
 import { useTaskStore } from '../store/taskStore';
 import { Task } from '../types';
 
 interface TaskInputProps {
   onComplete?: () => void;
-  defaultColumn?: 'em_aprovacao' | 'finalizada';
+  defaultColumn?: 'backlog' | 'em_aprovacao' | 'finalizada';
 }
 
-const TaskInput: React.FC<TaskInputProps> = ({ onComplete, defaultColumn = 'em_aprovacao' }) => {
+const TaskInput: React.FC<TaskInputProps> = ({ onComplete, defaultColumn = 'backlog' }) => {
   const [taskTitle, setTaskTitle] = useState('');
   const [description, setDescription] = useState('');
   const [responsible, setResponsible] = useState('');
   const [priority, setPriority] = useState<Task['priority']>('medium');
   const [dueDate, setDueDate] = useState('');
-  const [column, setColumn] = useState<'em_aprovacao' | 'finalizada'>(defaultColumn);
+  const [column, setColumn] = useState<'backlog' | 'em_aprovacao' | 'finalizada'>(defaultColumn);
+  const [timeSpent, setTimeSpent] = useState('');
   const addTask = useTaskStore(state => state.addTask);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (taskTitle.trim()) {
+      const timeInMs = timeSpent
+        ? (parseInt(timeSpent) * 60 * 1000) // Convert minutes to milliseconds
+        : 0;
+
       const newTask = {
         title: taskTitle.trim(),
         description: description.trim(),
         responsible: responsible.trim(),
         priority,
         dueDate: dueDate ? new Date(dueDate).getTime() : undefined,
-        column
+        column,
+        timeSpent: timeInMs
       };
       addTask(newTask);
       setTaskTitle('');
@@ -34,6 +40,7 @@ const TaskInput: React.FC<TaskInputProps> = ({ onComplete, defaultColumn = 'em_a
       setResponsible('');
       setPriority('medium');
       setDueDate('');
+      setTimeSpent('');
       onComplete?.();
     }
   };
@@ -49,9 +56,10 @@ const TaskInput: React.FC<TaskInputProps> = ({ onComplete, defaultColumn = 'em_a
       <div className="flex gap-2">
         <select
           value={column}
-          onChange={(e) => setColumn(e.target.value as 'em_aprovacao' | 'finalizada')}
+          onChange={(e) => setColumn(e.target.value as 'backlog' | 'em_aprovacao' | 'finalizada')}
           className="px-3 py-2 rounded-l bg-surface/50 text-text-primary border border-primary/20 focus:outline-none focus:ring-1 focus:ring-primary"
         >
+          <option value="backlog">Backlog</option>
           <option value="em_aprovacao">Em Aprovação</option>
           <option value="finalizada">Finalizada</option>
         </select>
@@ -110,6 +118,18 @@ const TaskInput: React.FC<TaskInputProps> = ({ onComplete, defaultColumn = 'em_a
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
               className="bg-transparent text-text-primary border-none focus:outline-none focus:ring-1 focus:ring-primary rounded"
+            />
+          </div>
+          
+          <div className="flex items-center gap-2 bg-surface/50 p-2 rounded border border-primary/20">
+            <Clock size={16} className="text-primary" />
+            <input
+              type="number"
+              min="0"
+              placeholder="Time spent (minutes)"
+              value={timeSpent}
+              onChange={(e) => setTimeSpent(e.target.value)}
+              className="bg-transparent text-text-primary border-none focus:outline-none focus:ring-1 focus:ring-primary rounded w-full"
             />
           </div>
         </div>

@@ -16,7 +16,6 @@ export interface Task {
 
 export interface ClickUpConfig {
   apiKey: string;
-  workspaceId: string;
   listId: string;
 }
 

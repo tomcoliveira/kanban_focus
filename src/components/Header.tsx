@@ -5,7 +5,14 @@ import { useTaskStore } from '../store/taskStore';
 const Header: React.FC = () => {
   const [syncing, setSyncing] = React.useState(false);
   const syncWithClickUp = useTaskStore(state => state.syncWithClickUp);
+  const initClickUpConfig = useTaskStore(state => state.initClickUpConfig);
   const clickUpConfig = useTaskStore(state => state.clickUpConfig);
+
+  React.useEffect(() => {
+    if (!clickUpConfig) {
+      initClickUpConfig();
+    }
+  }, [clickUpConfig, initClickUpConfig]);
 
   const handleSync = async () => {
     if (!clickUpConfig) return;
@@ -28,10 +35,10 @@ const Header: React.FC = () => {
             {clickUpConfig && (
               <button
                 onClick={handleSync}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-md bg-surface hover:bg-surface-hover text-text-secondary hover:text-white transition-colors ${syncing ? 'animate-spin' : ''}`}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-md bg-surface hover:bg-surface-hover text-text-secondary hover:text-white transition-colors`}
                 title="Sync with ClickUp"
               >
-                <RefreshCw className="h-4 w-4" /> 
+                <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} /> 
                 <span className="text-sm">Sync</span>
               </button>
             )}

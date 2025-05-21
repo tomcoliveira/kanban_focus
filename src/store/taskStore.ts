@@ -6,20 +6,37 @@ interface NewTask {
   description: string;
   priority: 'low' | 'medium' | 'high';
   dueDate?: number;
+  timeSpent?: number;
 }
 
 export const useTaskStore = create<TaskStoreState>((set, get) => ({
   tasks: [],
   clickUpConfig: null,
 
+  // Initialize ClickUp config
+  initClickUpConfig: () => {
+    set({
+      clickUpConfig: {
+        apiKey: 'pk_42977582_SID0A4XAF5BMA4E9IFT254KJGFK01C5F',
+        listId: '901305833574'
+      }
+    });
+    get().saveToStorage();
+  },
+
   // Actions
+  setClickUpConfig: (config: ClickUpConfig) => {
+    set({ clickUpConfig: config });
+    get().saveToStorage();
+  },
+
   addTask: (taskData: NewTask) => {
     const newTask: Task = {
       id: Date.now().toString(),
       ...taskData, 
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      timeSpent: 0,
+      timeSpent: taskData.timeSpent || 0,
     };
 
     set((state) => {
@@ -137,17 +154,28 @@ export const useTaskStore = create<TaskStoreState>((set, get) => ({
     if (!config) return;
 
     try {
-      const clickup = new ClickUp(config.apiKey);
-      const tasks = await clickup.lists.getTasks(config.listId);
-      
-      // Map ClickUp tasks to our format
-      const mappedTasks = tasks.map(task => ({
-        id: task.id,
+      const response = await fetch(`https://api.clickup.com/api/v2/list/${config.listId}/task`, {
+        headers: {
+          'Authorization': config.apiKey,
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch tasks from ClickUp');
+      }
+
+      const data = await response.json();
+      const mappedTasks = data.tasks.map((task: any) => ({
+        id: task.id.toString(),
         title: task.name,
-        column: mapClickUpStatusToColumn(task.status),
+        description: task.description || '',
+        priority: task.priority?.priority_normalized || 'medium',
+        column: mapClickUpStatusToColumn(task.status.status),
         createdAt: new Date(task.date_created).getTime(),
         updatedAt: new Date(task.date_updated).getTime(),
-        timeSpent: task.time_spent || 0,
+        timeSpent: task.time_spent || 0
       }));
 
       set({ tasks: mappedTasks });
