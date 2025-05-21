@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Ubuntu', sans-serif;
+  letter-spacing: -0.02em;
+  color: white;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.task-title {
+  font-size: 1.125rem;
+  letter-spacing: -0.02em;
+  font-weight: 500;
+}
